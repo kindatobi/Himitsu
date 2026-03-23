@@ -18,3 +18,14 @@ export function generateUserName() {
   const word = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
   return `anonymouse-${word}-${nanoid(5)}`;
 }
+
+export function copyLink() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url);
+}
+
+export function formatTimeRemaining(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}

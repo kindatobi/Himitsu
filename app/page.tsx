@@ -3,11 +3,13 @@
 import { api } from "@/lib/client";
 import { generateUserName, STORAGE_KEY } from "@/utils/helpers";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const [username, setUsername] = useState("");
+
   const router = useRouter();
 
   useEffect(() => {
@@ -27,6 +29,8 @@ export default function Home() {
   const { mutate: createRoom } = useMutation({
     mutationFn: async () => {
       const res = await api.room.create.post();
+
+      if (res.status === 200) router.push(`/room/${res.data?.roomId}`);
     },
   });
 

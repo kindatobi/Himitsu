@@ -1,10 +1,14 @@
 "use client";
 
+import { api } from "@/lib/client";
 import { generateUserName, STORAGE_KEY } from "@/utils/helpers";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export default function Home() {
   const [username, setUsername] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const main = () => {
@@ -19,6 +23,12 @@ export default function Home() {
     };
     main();
   }, []);
+
+  const { mutate: createRoom } = useMutation({
+    mutationFn: async () => {
+      const res = await api.room.create.post();
+    },
+  });
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -43,7 +53,10 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <button className="w-full bg-zinc-100 hover:scale-[0.97] transition-all text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black  mt-2 cursor-pointer disabled:opacity-50 uppercase">
+            <button
+              onClick={() => createRoom()}
+              className="w-full bg-zinc-100 hover:scale-[0.97] transition-all text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black  mt-2 cursor-pointer disabled:opacity-50 uppercase"
+            >
               create secure room
             </button>
           </div>

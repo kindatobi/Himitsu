@@ -12,6 +12,8 @@ const ANIMALS = [
 
 export const STORAGE_KEY = "chat_username";
 
+export const ROOM_TTL_SECONDS = 60 * 10;
+
 export function generateUserName() {
   const word = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
   return `anonymouse-${word}-${nanoid(5)}`;

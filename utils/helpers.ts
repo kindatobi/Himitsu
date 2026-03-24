@@ -16,7 +16,7 @@ export const ROOM_TTL_SECONDS = 60 * 10;
 
 export function generateUserName() {
   const word = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-  return `anonymouse-${word}-${nanoid(5)}`;
+  return `anonymous-${word}-${nanoid(5)}`;
 }
 
 export function copyLink() {

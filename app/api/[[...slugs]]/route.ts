@@ -2,6 +2,8 @@ import { redis } from "@/lib/redis";
 import { ROOM_TTL_SECONDS } from "@/utils/helpers";
 import { Elysia } from "elysia";
 import { nanoid } from "nanoid";
+import { authMiddleware } from "./auth";
+import z from "zod";
 
 const rooms = new Elysia({ prefix: "/room" }).post("/create", async () => {
   const roomId = nanoid();
@@ -15,6 +17,24 @@ const rooms = new Elysia({ prefix: "/room" }).post("/create", async () => {
 
   return { roomId };
 });
+
+const messages = new Elysia({ prefix: "/messages" }).use(authMiddleware).post(
+  "/",
+  async ({ body, auth }) => {
+    const { sender, text } = body;
+    const { roomId } = auth;
+
+    const roomExists = await redis.exists(`meta:${roomId}`);
+    if (!roomExists) throw new Error("Room does not exist");
+  },
+  {
+    query: z.object({ roomId: z.string() }),
+    body: z.object({
+      sender: z.string().max(100),
+      text: z.string().max(500),
+    }),
+  },
+);
 
 export const app = new Elysia({ prefix: "/api" }).use(rooms);
 

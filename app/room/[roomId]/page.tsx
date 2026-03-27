@@ -2,13 +2,16 @@
 
 import { useUsername } from "@/hooks/use-username";
 import { api } from "@/lib/client";
+import { useRealtime } from "@/lib/realtime-client";
 import { copyLink, formatTimeRemaining } from "@/utils/helpers";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { format } from "date-fns";
+import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 export default function RoomPage() {
   const params = useParams();
+  const router = useRouter();
   const [copyStatus, setCopyStatus] = useState("Copy");
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const { username } = useUsername();
@@ -16,7 +19,7 @@ export default function RoomPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const roomId = params.roomId as string;
 
-  const { data: messages } = useQuery({
+  const { data: messages, refetch } = useQuery({
     queryKey: ["messages", roomId],
     queryFn: async () => {
       const res = await api.messages.get({ query: { roomId } });
@@ -30,6 +33,20 @@ export default function RoomPage() {
         { sender: username, text },
         { query: { roomId } },
       );
+      setInput("");
+    },
+  });
+
+  useRealtime({
+    channels: [roomId],
+    events: ["chat.message", "chat.destroy"],
+    onData: ({ event }) => {
+      if (event === "chat.message") {
+        refetch();
+      }
+      if (event === "chat.destroy") {
+        router.push("/?destroyed=true");
+      }
     },
   });
 
@@ -85,8 +102,18 @@ export default function RoomPage() {
           <div key={msg.id} className="flex flex-col items-start">
             <div className="max-w-[80%] group">
               <div className="flex items-baseline gap-3 mb-1">
-                <span className={`text-xs font-bold ${}`}></span>
+                <span
+                  className={`text-xs font-bold ${msg.sender === username ? "text-green-500" : "text-blue-500"}`}
+                >
+                  {msg.sender === username ? "YOU" : msg.sender}
+                </span>
+                <span className="text-[10px] text-zinc-600">
+                  {format(msg.timestamp, "HH:mm")}
+                </span>
               </div>
+              <p className="text-sm text-zinc-300 leading-relaxed break-all">
+                {msg.text}
+              </p>
             </div>
           </div>
         ))}

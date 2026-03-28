@@ -165,7 +165,7 @@ export default function RoomPage() {
       <div className="p-4 border-t border-zinc-800 bg-zinc-900/30">
         <div className="flex gap-4">
           <div className="flex-1 relative group">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 animate-pulse">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-green-500 animate-pulse">
               {">"}
             </span>
             <input

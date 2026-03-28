@@ -7,23 +7,52 @@ import { copyLink, formatTimeRemaining } from "@/utils/helpers";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function RoomPage() {
   const params = useParams();
   const router = useRouter();
   const [copyStatus, setCopyStatus] = useState("Copy");
-  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const { username } = useUsername();
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const roomId = params.roomId as string;
 
+  const expiresAtRef = useRef<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+
+  const { data: ttlData } = useQuery({
+    queryKey: ["ttl", roomId],
+    queryFn: async () => {
+      const res = await api.room.ttl.get({ query: { roomId } });
+      return res.data;
+    },
+  });
+
+  useEffect(() => {
+    if (ttlData?.ttl === undefined) return;
+    if (expiresAtRef.current === null) {
+      expiresAtRef.current = Date.now() + ttlData.ttl * 1000;
+    }
+
+    const interval = setInterval(() => {
+      const remaining = Math.floor((expiresAtRef.current! - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(interval);
+        router.push("/?destroyed=true");
+        return;
+      }
+      setTimeRemaining(remaining);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [ttlData?.ttl, router]);
+
   const { data: messages, refetch } = useQuery({
     queryKey: ["messages", roomId],
     queryFn: async () => {
       const res = await api.messages.get({ query: { roomId } });
-      res.data;
+      return res.data;
     },
   });
 
@@ -34,6 +63,12 @@ export default function RoomPage() {
         { query: { roomId } },
       );
       setInput("");
+    },
+  });
+
+  const { mutate: destroyRoom } = useMutation({
+    mutationFn: async () => {
+      await api.room.delete(null, { query: { roomId } });
     },
   });
 
@@ -51,7 +86,7 @@ export default function RoomPage() {
   });
 
   return (
-    <main className="flex flex-col h-screen max-h-screen overflow-hidden ">
+    <main className="flex flex-col h-screen max-h-screen overflow-hidden">
       <header className="border-b border-zinc-800 p-4 flex items-center justify-between bg-zinc-900/30">
         <div className="flex items-center gap-4">
           <div className="flex flex-col">
@@ -78,7 +113,11 @@ export default function RoomPage() {
               self-destruct
             </span>
             <span
-              className={`text-sm font-bold  items-center gap-2 ${timeRemaining !== null && timeRemaining < 60 ? "text-red-500" : "text-amber-500"}`}
+              className={`text-sm font-bold items-center gap-2 ${
+                timeRemaining !== null && timeRemaining < 60
+                  ? "text-red-500"
+                  : "text-amber-500"
+              }`}
             >
               {timeRemaining !== null
                 ? formatTimeRemaining(timeRemaining)
@@ -86,24 +125,29 @@ export default function RoomPage() {
             </span>
           </div>
         </div>
-        <button className="text-xs font-bold transition-all gap-2 disabled:opacity-50  group flex items-center bg-zinc-800 hover:bg-red-600 px-3 py-1.5 rounded text-zinc-400 hover:text-white">
+        <button
+          onClick={() => destroyRoom()}
+          className="text-xs font-bold transition-all gap-2 disabled:opacity-50 group flex items-center bg-zinc-800 hover:bg-red-600 px-3 py-1.5 rounded text-zinc-400 hover:text-white"
+        >
           KILL ROOM
         </button>
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">
-        {messages.messages.length === 0 && (
+        {messages?.messages.length === 0 && (
           <div className="flex items-center justify-center h-full">
             <p className="text-zinc-600 text-sm font-mono">
               No messages yet, start the conversation.
             </p>
           </div>
         )}
-        {messages.messages.map((msg) => (
+        {messages?.messages.map((msg) => (
           <div key={msg.id} className="flex flex-col items-start">
             <div className="max-w-[80%] group">
               <div className="flex items-baseline gap-3 mb-1">
                 <span
-                  className={`text-xs font-bold ${msg.sender === username ? "text-green-500" : "text-blue-500"}`}
+                  className={`text-xs font-bold ${
+                    msg.sender === username ? "text-green-500" : "text-blue-500"
+                  }`}
                 >
                   {msg.sender === username ? "YOU" : msg.sender}
                 </span>

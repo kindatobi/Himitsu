@@ -92,7 +92,9 @@ export default function RoomPage() {
           <div className="flex flex-col">
             <span className="text-zinc-500 uppercase text-xs">room id</span>
             <div className="flex items-center gap-2">
-              <span className="text-green-500 font-bold">{roomId}</span>
+              <span className="text-green-500 text-sm md:text-base font-bold">
+                {roomId}
+              </span>
               <button
                 className="text-[10px] bg-zinc-800 hover:bg-zinc-700 px-2 py-0.5 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
                 onClick={() => {

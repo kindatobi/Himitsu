@@ -6,7 +6,7 @@ import { api } from "@/lib/client";
 import { useMutation } from "@tanstack/react-query";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useTransition } from "react";
 
 const Page = () => {
   return (
@@ -19,25 +19,24 @@ const Page = () => {
 export default Page;
 
 function Lobby() {
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { username } = useUsername();
   const searchParams = useSearchParams();
   const wasDestroyed = searchParams.get("destroyed") === "true";
   const error = searchParams.get("error");
 
-  const { mutate: createRoom, isPending } = useMutation({
+  const { mutate: createRoom } = useMutation({
     mutationFn: async () => {
       const res = await api.room.create.post();
 
       if (res.status === 200) {
-        setIsNavigating(true);
-        router.push(`/room/${res.data?.roomId}`);
+        startTransition(() => {
+          router.push(`/room/${res.data?.roomId}`);
+        });
       }
     },
   });
-
-  const isLoading = isPending || isNavigating;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -97,7 +96,7 @@ function Lobby() {
               disabled={isPending}
               className="w-full bg-zinc-100 hover:scale-[0.97] transition-all text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black  mt-2 cursor-pointer disabled:opacity-50 uppercase"
             >
-              {isLoading ? "initializing..." : "create secure room"}
+              {isPending ? "initializing..." : "create secure room"}
             </button>
           </div>
         </div>

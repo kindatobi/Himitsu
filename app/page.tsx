@@ -26,7 +26,7 @@ function Lobby() {
   const wasDestroyed = searchParams.get("destroyed") === "true";
   const error = searchParams.get("error");
 
-  const { mutate: createRoom } = useMutation({
+  const { mutate: createRoom, isPending: isCreating } = useMutation({
     mutationFn: async () => {
       const res = await api.room.create.post();
 
@@ -37,6 +37,8 @@ function Lobby() {
       }
     },
   });
+
+  const isLoading = isCreating || isPending;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
@@ -93,10 +95,10 @@ function Lobby() {
             </div>
             <button
               onClick={() => createRoom()}
-              disabled={isPending}
+              disabled={isLoading}
               className="w-full bg-zinc-100 hover:scale-[0.97] transition-all text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black  mt-2 cursor-pointer disabled:opacity-50 uppercase"
             >
-              {isPending ? "initializing..." : "create secure room"}
+              {isLoading ? "initializing..." : "create secure room"}
             </button>
           </div>
         </div>

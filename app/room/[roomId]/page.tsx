@@ -137,9 +137,9 @@ export default function RoomPage() {
         </div>
         <button
           onClick={() => destroyRoom()}
-          className="text-xs font-bold transition-all gap-2 disabled:opacity-50 group flex items-center bg-zinc-800 hover:bg-red-600 px-3 py-1.5 rounded text-zinc-400 hover:text-white"
+          className="text-xs font-bold uppercase transition-all gap-2 disabled:opacity-50 group flex items-center bg-zinc-800 hover:bg-red-600 px-3 py-1.5 rounded text-zinc-400 hover:text-white"
         >
-          KILL ROOM
+          kill room
         </button>
       </header>
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin">

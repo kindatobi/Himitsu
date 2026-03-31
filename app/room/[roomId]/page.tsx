@@ -2,6 +2,7 @@
 
 import { useUsername } from "@/hooks/use-username";
 import { api } from "@/lib/client";
+import { Message } from "@/lib/realtime";
 import { useRealtime } from "@/lib/realtime-client";
 import { copyLink, formatTimeRemaining } from "@/utils/helpers";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -78,10 +79,13 @@ export default function RoomPage() {
     events: ["chat.message", "chat.destroy"],
     onData: ({ event, data }) => {
       if (event === "chat.message") {
-        queryClient.setQueryData(["messages", roomId], (old: string[]) => [
-          ...old,
-          data.text,
-        ]);
+        queryClient.setQueryData<{ messages: Message[] }>(
+          ["messages", roomId],
+          (old) => ({
+            ...old,
+            messages: [...old!.messages, data],
+          }),
+        );
       }
       if (event === "chat.destroy") {
         router.push("/?destroyed=true");

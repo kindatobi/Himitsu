@@ -4,7 +4,7 @@ import { useUsername } from "@/hooks/use-username";
 import { api } from "@/lib/client";
 import { useRealtime } from "@/lib/realtime-client";
 import { copyLink, formatTimeRemaining } from "@/utils/helpers";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 export default function RoomPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [copyStatus, setCopyStatus] = useState("Copy");
   const { username } = useUsername();
   const [input, setInput] = useState("");
@@ -48,7 +49,7 @@ export default function RoomPage() {
     return () => clearInterval(interval);
   }, [ttlData?.ttl, router]);
 
-  const { data: messages, refetch } = useQuery({
+  const { data: messages } = useQuery({
     queryKey: ["messages", roomId],
     queryFn: async () => {
       const res = await api.messages.get({ query: { roomId } });
@@ -75,9 +76,12 @@ export default function RoomPage() {
   useRealtime({
     channels: [roomId],
     events: ["chat.message", "chat.destroy"],
-    onData: ({ event }) => {
+    onData: ({ event, data }) => {
       if (event === "chat.message") {
-        refetch();
+        queryClient.setQueryData(["messages", roomId], (old: string[]) => [
+          ...old,
+          data.text,
+        ]);
       }
       if (event === "chat.destroy") {
         router.push("/?destroyed=true");

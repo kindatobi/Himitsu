@@ -56,6 +56,7 @@ export default function RoomPage() {
       const res = await api.messages.get({ query: { roomId } });
       return res.data;
     },
+    staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchOnMount: false,

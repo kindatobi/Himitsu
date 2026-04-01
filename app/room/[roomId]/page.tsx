@@ -58,6 +58,7 @@ export default function RoomPage() {
     },
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   const { mutate: sendMessage, isPending } = useMutation({

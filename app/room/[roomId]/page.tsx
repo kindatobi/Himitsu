@@ -29,6 +29,9 @@ export default function RoomPage() {
       const res = await api.room.ttl.get({ query: { roomId } });
       return res.data;
     },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
   });
 
   useEffect(() => {

@@ -85,10 +85,13 @@ export default function RoomPage() {
       if (event === "chat.message") {
         queryClient.setQueryData<{ messages: Message[] }>(
           ["messages", roomId],
-          (old) => ({
-            ...old,
-            messages: [...old!.messages, data],
-          }),
+          (old) => {
+            if (old?.messages.some((m) => m.id === data.id)) return old;
+            return {
+              ...old!,
+              messages: [...old!.messages, data],
+            };
+          },
         );
       }
       if (event === "chat.destroy") {
